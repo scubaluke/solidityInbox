@@ -31,4 +31,3 @@ describe('Inbox', () => {
     })
 })
 
-// endpoint https://rinkeby.infura.io/v3/b16bb0aaa18a4383a6f68ab11f94350a
