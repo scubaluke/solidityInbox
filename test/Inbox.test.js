@@ -1,28 +1,34 @@
 const assert = require('assert');
 const ganache = require('ganache-cli');
 const Web3 = require('web3');
+const { interface, bytecode} = require('../compile')
 
-// const  web3 = new Web3(ganache.provider())
+const  web3 = new Web3(ganache.provider())
+let accounts, inbox
+const INITIAL_STRING = 'Hi there'
+beforeEach(async () => {
+    // get list of all accounts
+     accounts = await web3.eth.getAccounts()
 
-class Car {
-    park() {
-        return 'stopped'
-    }
-    drive() {
-        return 'vrooommmm'
-    }
-}
-    let car;
-    beforeEach(() => {
-         car =  new Car()
+    // use account to deploy contract
+   inbox = await new web3.eth.Contract(JSON.parse(interface))
+    .deploy({ data: bytecode, arguments: [INITIAL_STRING] })
+    .send({ from: accounts[0], gas: '1000000' })
+})
 
+describe('Inbox', () => {
+    it('deploys a contract', () => {
+        assert.ok(inbox.options.address)
     })
-
-describe('Car', () => {
-    it('can park', () => {
-        assert.strictEqual(car.park(), 'stopped')
+    it('has  a default message', async () => {
+        const message = await inbox.methods.message().call()
+        assert.strictEqual(message, INITIAL_STRING)
     })
-    it('can drive', () => {
-        assert.strictEqual(car.drive(), 'vrooommmm')
+    it('can change the message', async () => {
+       await inbox.methods.setMessage('bye').send({ from: accounts[0] })
+       const message = await inbox.methods.message().call()
+       assert.strictEqual(message, 'bye')
     })
 })
+
+// endpoint https://rinkeby.infura.io/v3/b16bb0aaa18a4383a6f68ab11f94350a
